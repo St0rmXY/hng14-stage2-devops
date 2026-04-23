@@ -1,0 +1,36 @@
+# ── Stage 1: builder ──────────────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+
+# ── Stage 2: runtime ──────────────────────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+# Create non-root user
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+COPY --chown=appuser:appgroup . .
+
+USER appuser
+
+# Worker has no HTTP port — healthcheck verifies the process is alive via Redis ping
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD python -c "\
+import os, redis; \
+r = redis.Redis(host=os.getenv('REDIS_HOST','redis'), port=6379); \
+r.ping()" || exit 1
+
+CMD ["python", "worker.py"]
