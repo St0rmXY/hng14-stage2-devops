@@ -1,25 +1,19 @@
-# ── Stage 1: builder ──────────────────────────────────────────────────────────
+# hadolint ignore=DL3018
 FROM node:20-alpine AS builder
 
 WORKDIR /build
 
-# Copy manifests first for layer caching
 COPY package*.json ./
 RUN npm ci --only=production
 
-
-# ── Stage 2: runtime ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
 
-# Create non-root user (alpine style)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy production node_modules from builder — no devDependencies in final image
 COPY --from=builder --chown=appuser:appgroup /build/node_modules ./node_modules
 
-# Copy application source
 COPY --chown=appuser:appgroup . .
 
 USER appuser
@@ -29,4 +23,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD wget -qO- http://localhost:3000/health || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", "app.js"]

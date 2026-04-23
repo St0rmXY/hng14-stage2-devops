@@ -51,9 +51,7 @@ jobs:
       - name: Lint JavaScript (eslint)
         run: |
           cd frontend
-          npx eslint . --ext .js \
-            --ignore-pattern node_modules/ \
-            --rule '{"no-unused-vars": "warn", "no-console": "off"}'
+          npx eslint . 
 
       # Dockerfiles — hadolint
       - name: Install hadolint

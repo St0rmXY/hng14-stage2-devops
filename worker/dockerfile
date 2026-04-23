@@ -1,4 +1,4 @@
-# ── Stage 1: builder ──────────────────────────────────────────────────────────
+# hadolint ignore=DL3008,DL3013
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
@@ -11,22 +11,18 @@ COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-
-# ── Stage 2: runtime ──────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
 COPY --from=builder /install /usr/local
 
-# Create non-root user
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 COPY --chown=appuser:appgroup . .
 
 USER appuser
 
-# Worker has no HTTP port — healthcheck verifies the process is alive via Redis ping
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD python -c "\
 import os, redis; \

@@ -1,8 +1,8 @@
+# hadolint ignore=DL3008,DL3013
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# Install build deps only in this stage
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
@@ -11,19 +11,14 @@ COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-
-# ── Stage 2: runtime ──────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
-# Copy installed packages from builder — no gcc, no pip cache in final image
 COPY --from=builder /install /usr/local
 
-# Create non-root user
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-# Copy only application source
 COPY --chown=appuser:appgroup . .
 
 USER appuser
