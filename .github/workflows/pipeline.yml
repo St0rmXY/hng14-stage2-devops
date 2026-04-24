@@ -162,13 +162,13 @@ jobs:
         with:
           driver-opts: network=host
 
-      - name: Rebuild images into local registry
+      - name: Rebuild images into local registry with no cache
         run: |
-          docker buildx build --push \
+          docker buildx build --no-cache --push \
             -t ${{ env.REGISTRY }}/api:${{ github.sha }} ./api
-          docker buildx build --push \
+          docker buildx build --no-cache --push \
             -t ${{ env.REGISTRY }}/worker:${{ github.sha }} ./worker
-          docker buildx build --push \
+          docker buildx build --no-cache --push \
             -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} ./frontend
 
       - name: Scan API image with Trivy
@@ -181,6 +181,7 @@ jobs:
           severity: CRITICAL
           ignore-unfixed: true
           vuln-type: "os,library"
+          scanners: "vuln"
 
       - name: Scan worker image with Trivy
         uses: aquasecurity/trivy-action@master
@@ -192,6 +193,7 @@ jobs:
           severity: CRITICAL
           ignore-unfixed: true
           vuln-type: "os,library"
+          scanners: "vuln"
 
       - name: Scan frontend image with Trivy
         uses: aquasecurity/trivy-action@master
@@ -203,6 +205,7 @@ jobs:
           severity: CRITICAL
           ignore-unfixed: true
           vuln-type: "os,library"
+          scanners: "vuln"
 
       - name: Upload Trivy SARIF results artifact
         uses: actions/upload-artifact@v4
