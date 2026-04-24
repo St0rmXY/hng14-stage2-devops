@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, JSONResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 import redis
 import uuid
 import os
