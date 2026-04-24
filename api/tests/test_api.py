@@ -13,7 +13,7 @@ from main import app  # noqa: E402
 @pytest.fixture
 def fake_redis():
     server = fakeredis.FakeServer()
-    return fakeredis.FakeRedis(server=server)
+    return fakeredis.FakeRedis(server=server, decode_responses=False)
 
 
 @pytest.fixture
@@ -33,7 +33,9 @@ def test_create_job_returns_job_id(client, fake_redis):
     with patch("main.r", fake_redis):
         response = client.post("/jobs", json={"payload": "test-job"})
     assert response.status_code == 200
-    assert "job_id" in response.json()
+    data = response.json()
+    assert "job_id" in data
+    assert len(data["job_id"]) > 0
 
 
 def test_each_job_gets_unique_id(client, fake_redis):
@@ -43,7 +45,7 @@ def test_each_job_gets_unique_id(client, fake_redis):
     assert r1.json()["job_id"] != r2.json()["job_id"]
 
 
-def test_new_job_status_is_pending(client, fake_redis):
+def test_new_job_status_is_queued(client, fake_redis):
     with patch("main.r", fake_redis):
         create = client.post("/jobs", json={"payload": "status-check"})
         job_id = create.json()["job_id"]
