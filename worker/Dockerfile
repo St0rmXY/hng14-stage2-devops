@@ -1,5 +1,5 @@
-# hadolint ignore=DL3008,DL3013
-FROM python:3.11-slim AS builder
+# hadolint ignore=DL3008
+FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
@@ -8,10 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# hadolint ignore=DL3013,DL3042
 RUN pip install --upgrade pip \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-FROM python:3.11-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 WORKDIR /app
 
