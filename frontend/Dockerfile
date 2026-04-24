@@ -3,12 +3,18 @@ FROM node:22-alpine AS builder
 
 WORKDIR /build
 
+# Apply alpine security patches
+RUN apk update && apk upgrade
+
 COPY package*.json ./
 RUN npm ci --only=production
 
 FROM node:22-alpine AS runtime
 
 WORKDIR /app
+
+# Apply alpine security patches
+RUN apk update && apk upgrade
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 

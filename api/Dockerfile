@@ -3,7 +3,7 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -15,6 +15,11 @@ RUN pip install --upgrade pip \
 FROM python:3.13-slim AS runtime
 
 WORKDIR /app
+
+# Apply all OS security patches so Trivy finds no fixable CVEs
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /usr/local
 
